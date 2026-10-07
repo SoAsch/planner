@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>План месяца</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="План">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#000000; --panel:#0f0f0f; --line:#262626; --text:#ededed; --muted:#8c8c8c; --empty:#262626; color-scheme:dark;
+  --font:"Manrope","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+:root[data-theme="light"]{--bg:#efe6d4; --panel:#f7f1e3; --line:#dccfb6; --text:#2b2519; --muted:#7b705c; --empty:#e2d6bd; color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.4}
+.wrap{max-width:1400px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+h1{font-size:26px;margin:0;font-weight:800;letter-spacing:-.02em}
+.nav{display:flex;align-items:center;gap:8px}
+button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible{outline:2px solid #6ea8ff;outline-offset:2px}
+.range{min-width:150px;text-align:center;font-weight:700}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+.scroll{overflow-x:auto;padding-bottom:6px}
+table{border-collapse:separate;border-spacing:0 6px}
+th{font-weight:600;padding:0 2px 2px;text-align:center;white-space:nowrap}
+th.wk{font-size:13px;padding:6px 0;border-radius:8px 8px 0 0}
+th.dd{font-size:11px;color:var(--muted);line-height:1.2;padding-bottom:6px}
+th.dd b{display:block;font-size:13px;color:var(--text);font-weight:700}
+th.dd.today b{color:var(--bg);background:var(--text);border-radius:6px}
+td{padding:0 2px;text-align:center}
+td.nm,th.nm{position:sticky;left:0;z-index:2;background:var(--panel);text-align:left;padding:0 12px 0 0;min-width:150px}
+.sp{width:16px;min-width:16px;padding:0}
+.name{display:flex;align-items:center;gap:8px;font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.x{margin-left:auto;background:none;border:none;color:var(--muted);padding:2px 6px;border-radius:6px}
+.x:hover{color:#ff7a8a}
+.cb{width:32px;height:32px;border-radius:8px;border:2px solid var(--c);background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .12s}
+.cb[aria-checked="true"]{background:var(--c)}
+.cb svg{width:16px;height:16px;opacity:0;stroke:#0b0b0b;stroke-width:3.2;fill:none}
+.cb[aria-checked="true"] svg{opacity:1}
+.bar{height:8px;background:var(--empty);border-radius:4px;width:90px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c);transition:width .25s}
+.pct{font-size:12px;color:var(--muted);width:44px;text-align:left}
+.add{display:flex;align-items:center;gap:10px;margin-top:14px}
+.plus{width:36px;height:36px;border-radius:50%;padding:0;font-size:22px;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none;transition:transform .2s}
+.plus[aria-expanded="true"]{transform:rotate(45deg)}
+.addform{display:flex;gap:8px;overflow:hidden;max-width:0;opacity:0;visibility:hidden;transition:max-width .25s,opacity .2s,visibility 0s .25s}
+.addform.open{max-width:460px;flex:1;opacity:1;visibility:visible;transition-delay:0s}
+.dbar{height:64px;width:32px;margin:0 auto;display:flex;align-items:flex-end;background:var(--empty);border-radius:6px;overflow:hidden}
+.dbar i{display:block;width:100%;transition:height .25s}
+td.cl{font-size:12px;color:var(--muted);vertical-align:bottom;padding-bottom:4px}
+input{flex:1;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0}
+h2{font-size:15px;margin:0 0 12px;font-weight:700}
+.stats{display:grid;grid-template-columns:260px 1fr 1fr;gap:16px}
+@media(max-width:900px){.stats{grid-template-columns:1fr}}
+.stats .panel{margin:0}
+.donutbox{position:relative;width:200px;height:200px;margin:0 auto}
+.donutbox svg{width:100%;height:100%;transform:rotate(-90deg)}
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.center b{font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.center span{font-size:12px;color:var(--muted);margin-top:4px}
+.row{display:flex;align-items:center;gap:10px;font-size:13px;margin-bottom:10px}
+.row .lbl{width:84px;flex:none;display:flex;align-items:center;gap:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .bar{flex:1;width:auto}
+.row em{font-style:normal;color:var(--muted);width:78px;text-align:right;flex:none}
+.empty{color:var(--muted);padding:16px 0}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>План месяца</h1>
+    <div class="nav">
+      <button id="prev" aria-label="Предыдущий месяц">‹</button>
+      <div class="range" id="range"></div>
+      <button id="next" aria-label="Следующий месяц">›</button>
+      <button id="today">Сегодня</button>
+      <button id="theme" aria-label="Сменить тему"></button>
+    </div>
+  </header>
+  <section class="panel">
+    <div class="scroll"><table id="tbl"></table></div>
+    <div class="add">
+      <button id="plus" class="plus" aria-label="Добавить задачу" aria-expanded="false">+</button>
+      <div class="addform" id="addform">
+        <input id="newName" placeholder="Новая привычка или задача" maxlength="40">
+        <button id="addBtn">Добавить</button>
+      </div>
+    </div>
+  </section>
+  <div class="stats">
+    <section class="panel">
+      <h2>Выполнение месяца</h2>
+      <div class="donutbox"><svg viewBox="0 0 200 200" id="donut"></svg>
+        <div class="center"><b id="total">0%</b><span id="totalSub"></span></div></div>
+    </section>
+    <section class="panel"><h2>По неделям</h2><div id="weeks"></div></section>
+    <section class="panel"><h2>По привычкам</h2><div id="habits"></div></section>
+  </div>
+</div>
+<script>
+var WD=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+var HC=["#ff4d5e","#a66bff","#2ec4e6","#ffb02e","#3ddc84","#ff7ab8","#6ea8ff","#c6e03a"];
+var WC=["#ff4d5e","#a66bff","#2ec4e6","#ffb02e","#3ddc84","#ff7ab8"];
+var KEY="weekly-planner-v1";
+var state={habits:[{id:1,name:"Чтение",c:0},{id:2,name:"Тренировка",c:1},{id:3,name:"Вода",c:2},{id:4,name:"Python",c:3}],checks:{},nextId:5};
+try{var s=localStorage.getItem(KEY);if(s){var p=JSON.parse(s);if(p&&p.habits)state=p;}}catch(e){}
+function pad(n){return n<10?"0"+n:""+n;}
+function iso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+(function migrate(){
+  var out={},ch=false;
+  Object.keys(state.checks).forEach(function(k){
+    var q=k.split("|");
+    if(q.length===3){var w=q[0].split("-");out[iso(new Date(+w[0],+w[1]-1,+w[2]+ +q[2]))+"|"+q[1]]=true;ch=true;}
+    else out[k]=true;
+  });
+  if(ch){state.checks=out;save();}
+})();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function setTheme(t){document.documentElement.setAttribute("data-theme",t);document.getElementById("theme").textContent=t==="light"?"🌙 Тёмная":"☀ Светлая";try{localStorage.setItem(KEY+"-theme",t);}catch(e){}}
+var now=new Date(),M={y:now.getFullYear(),m:now.getMonth()};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function key(d,h){return M.y+"-"+pad(M.m+1)+"-"+pad(d)+"|"+h;}
+function weeks(){
+  var n=new Date(M.y,M.m+1,0).getDate(),out=[],cur=[];
+  for(var d=1;d<=n;d++){
+    if(cur.length&&new Date(M.y,M.m,d).getDay()===1){out.push(cur);cur=[];}
+    cur.push(d);
+  }
+  out.push(cur);return out;
+}
+function render(){
+  var title=new Date(M.y,M.m,1).toLocaleDateString("ru-RU",{month:"long",year:"numeric"});
+  document.getElementById("range").textContent=title.charAt(0).toUpperCase()+title.slice(1);
+  var H=state.habits,W=weeks(),t=document.getElementById("tbl");
+  var isNow=(M.y===now.getFullYear()&&M.m===now.getMonth());
+  var h1='<tr><th class="nm"></th>',h2='<tr><th class="nm"></th>';
+  W.forEach(function(w,i){
+    var c=WC[i%WC.length];
+    h1+='<th class="wk" colspan="'+w.length+'" style="background:'+c+'22;color:'+c+'">Неделя '+(i+1)+'</th><th class="sp"></th>';
+    w.forEach(function(d){
+      var td=isNow&&d===now.getDate();
+      h2+='<th class="dd'+(td?' today':'')+'">'+WD[new Date(M.y,M.m,d).getDay()]+'<b>'+d+'</b></th>';
+    });
+    h2+='<th class="sp"></th>';
+  });
+  h1+='<th colspan="2"></th></tr>';h2+='<th colspan="2" class="dd">Итого</th></tr>';
+  var rows='';
+  if(!H.length)rows='<tr><td class="empty">Добавь первую привычку внизу.</td></tr>';
+  H.forEach(function(x){
+    var n=0,r='',total=0;
+    W.forEach(function(w,i){
+      var c=WC[i%WC.length];
+      w.forEach(function(d){
+        total++;
+        var on=!!state.checks[key(d,x.id)];if(on)n++;
+        r+='<td><button class="cb" style="--c:'+c+'" role="checkbox" aria-checked="'+on+'" aria-label="'+esc(x.name)+', '+d+'" data-h="'+x.id+'" data-d="'+d+'"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button></td>';
+      });
+      r+='<td class="sp"></td>';
+    });
+    var pc=Math.round(n/total*100),col=HC[x.c%HC.length];
+    rows+='<tr><td class="nm"><div class="name"><span class="dot" style="background:'+col+'"></span>'+esc(x.name)+'<button class="x" data-del="'+x.id+'" aria-label="Удалить '+esc(x.name)+'">✕</button></div></td>'+r+
+      '<td><div class="bar" style="--c:'+col+'"><i style="width:'+pc+'%"></i></div></td><td class="pct">'+pc+'%</td></tr>';
+  });
+  var ch='<tr><td class="nm cl">Выполнение по дням</td>';
+  W.forEach(function(w,i){
+    var c=WC[i%WC.length];
+    w.forEach(function(d){
+      var n=0;H.forEach(function(x){if(state.checks[key(d,x.id)])n++;});
+      var p=H.length?Math.round(n/H.length*100):0;
+      ch+='<td><div class="dbar" title="'+p+'%"><i style="height:'+p+'%;background:'+c+'"></i></div></td>';
+    });
+    ch+='<td class="sp"></td>';
+  });
+  ch+='<td colspan="2"></td></tr>';
+  t.innerHTML=ch+h1+h2+rows;
+  stats(W);
+}
+function stats(W){
+  var H=state.habits,days=0;W.forEach(function(w){days+=w.length;});
+  var total=H.length*days,done=0,per=H.map(function(){return 0;}),wd=W.map(function(){return 0;});
+  H.forEach(function(x,i){W.forEach(function(w,j){w.forEach(function(d){if(state.checks[key(d,x.id)]){per[i]++;wd[j]++;done++;}});});});
+  var pc=total?Math.round(done/total*100):0;
+  document.getElementById("total").textContent=pc+"%";
+  document.getElementById("totalSub").textContent=done+" из "+total;
+  var R=78,C=2*Math.PI*R,svg='<circle cx="100" cy="100" r="'+R+'" fill="none" style="stroke:var(--empty)" stroke-width="22"/>',off=0;
+  H.forEach(function(x,i){
+    if(!per[i]||!total)return;
+    var len=per[i]/total*C;
+    svg+='<circle cx="100" cy="100" r="'+R+'" fill="none" stroke="'+HC[x.c%HC.length]+'" stroke-width="22" stroke-dasharray="'+len+' '+(C-len)+'" stroke-dashoffset="'+(-off)+'"/>';
+    off+=len;
+  });
+  document.getElementById("donut").innerHTML=svg;
+  var wh="";
+  W.forEach(function(w,j){
+    var tot=H.length*w.length,p=tot?Math.round(wd[j]/tot*100):0,c=WC[j%WC.length];
+    wh+='<div class="row"><span class="lbl">Неделя '+(j+1)+'</span><div class="bar" style="--c:'+c+'"><i style="width:'+p+'%"></i></div><em>'+p+'%</em></div>';
+  });
+  document.getElementById("weeks").innerHTML=wh;
+  var hh="";
+  H.forEach(function(x,i){
+    var p=days?Math.round(per[i]/days*100):0,c=HC[x.c%HC.length];
+    hh+='<div class="row"><span class="lbl" title="'+esc(x.name)+'"><span class="dot" style="background:'+c+'"></span>'+esc(x.name)+'</span><div class="bar" style="--c:'+c+'"><i style="width:'+p+'%"></i></div><em>'+per[i]+' / '+days+'</em></div>';
+  });
+  document.getElementById("habits").innerHTML=hh||'<div class="empty">Пока пусто.</div>';
+}
+document.getElementById("tbl").addEventListener("click",function(e){
+  var cb=e.target.closest(".cb");
+  if(cb){var k=key(+cb.dataset.d,cb.dataset.h);if(state.checks[k])delete state.checks[k];else state.checks[k]=true;save();render();return;}
+  var del=e.target.closest("[data-del]");
+  if(del){var id=+del.dataset.del;state.habits=state.habits.filter(function(x){return x.id!==id;});save();render();}
+});
+function add(){
+  var i=document.getElementById("newName"),v=i.value.trim();
+  if(!v)return;
+  state.habits.push({id:state.nextId++,name:v,c:state.habits.length%HC.length});
+  i.value="";closeAdd();save();render();
+}
+function closeAdd(){document.getElementById("addform").classList.remove("open");document.getElementById("plus").setAttribute("aria-expanded","false");}
+document.getElementById("plus").onclick=function(){
+  var f=document.getElementById("addform"),o=!f.classList.contains("open");
+  f.classList.toggle("open",o);this.setAttribute("aria-expanded",o);
+  if(o)setTimeout(function(){document.getElementById("newName").focus();},60);
+};
+document.getElementById("addBtn").onclick=add;
+document.getElementById("newName").addEventListener("keydown",function(e){if(e.key==="Enter")add();if(e.key==="Escape")closeAdd();});
+document.getElementById("prev").onclick=function(){M.m--;if(M.m<0){M.m=11;M.y--;}render();};
+document.getElementById("next").onclick=function(){M.m++;if(M.m>11){M.m=0;M.y++;}render();};
+document.getElementById("today").onclick=function(){M={y:now.getFullYear(),m:now.getMonth()};render();};
+var th="dark";try{th=localStorage.getItem(KEY+"-theme")||"dark";}catch(e){}
+setTheme(th==="light"?"light":"dark");
+document.getElementById("theme").onclick=function(){setTheme(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light");};
+render();
+</script>
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}
+</script>
+</body>
+</html>
